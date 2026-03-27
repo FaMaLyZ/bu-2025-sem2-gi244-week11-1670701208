@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag("PowerUP"))
+        if(other.CompareTag("PowerUp"))
         {
             hasPowerUp = true;
             Destroy(other.gameObject);
