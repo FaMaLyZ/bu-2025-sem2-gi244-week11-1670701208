@@ -10,7 +10,12 @@ public class PlayerController : MonoBehaviour
     public Transform focalPoint;
 
     public bool hasPowerUp;
+    private Coroutine boostCoroutine;
 
+    public GameObject PowerUpEffectPrefab;
+    private GameObject effect;
+    
+    
     private Rigidbody rb;
 
     
@@ -18,7 +23,7 @@ public class PlayerController : MonoBehaviour
     private InputAction smashAction;
     private InputAction breakAction;
 
-    private Coroutine powerUpRoutine;
+    
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
@@ -38,41 +43,47 @@ public class PlayerController : MonoBehaviour
         {
             rb.linearVelocity = Vector3.zero;
         }
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        if(other.CompareTag("PowerUp"))
+        if(effect != null)
         {
-            hasPowerUp = true;
-            Destroy(other.gameObject);
-            if(powerUpRoutine != null)
-            {
-                StopCoroutine(powerUpRoutine);
-            }
-            powerUpRoutine = StartCoroutine(PowerUpCooldown());
+            effect.transform.position = transform.position;
         }
     }
 
-    IEnumerator PowerUpCooldown()
+     private void OnCollisionEnter(Collision collision)
     {
-        yield return new WaitForSeconds(10f);
-        hasPowerUp=false;
-    }
-
-    private void OCollisionEnter(Collision collision)
-    {
-        if(collision.gameObject.CompareTag("Enemy"))
+        if (collision.gameObject.CompareTag("Enemy"))
         {
-            if(hasPowerUp)
+            if (hasPowerUp)
             {
-                var enemyRb =collision.gameObject.GetComponent<Rigidbody>();
-                /*var v = enemyRb.linearVelocity;
-                v.Normalize();*/
-                var dir = enemyRb.transform.position - transform.position  ;
+                var enemyRb = collision.gameObject.GetComponent<Rigidbody>();
+                var dir = enemyRb.transform.position - transform.position;
                 dir.Normalize();
-                enemyRb.AddForce(dir * 10,ForceMode.Impulse);
+                enemyRb.AddForce(dir * 10, ForceMode.Impulse);
             }
         }
+    }
+
+    public void Boost(float duration)
+    {
+        if (boostCoroutine != null)
+        {
+            StopCoroutine(boostCoroutine);
+        }
+        boostCoroutine = StartCoroutine(BoostRoutine(duration));
+    }
+
+    IEnumerator BoostRoutine(float duration)
+    {   
+        if (effect != null)
+        {
+            Destroy(effect.gameObject);
+        }
+        effect = Instantiate(PowerUpEffectPrefab,transform.position,Quaternion.identity);
+        Debug.Log("Boost Activated");
+        hasPowerUp = true;
+        yield return new WaitForSeconds(duration);
+        Destroy(effect.gameObject);
+        Debug.Log("Boost Ended");
+        hasPowerUp = false;
     }
 }
